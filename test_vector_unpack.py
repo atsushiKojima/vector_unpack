@@ -32,13 +32,14 @@ class vector_unpack(nn.Module):
             vector_sequence[index, length:, :] = 0
         
         # L1 norm で正規化 eq(3)
-        y = vector_sequence / torch.sum(torch.abs(vector_sequence), dim=1).unsqueeze(1)
+        y = torch.sum(vector_sequence, dim=1) / torch.sum(torch.abs(vector_sequence), dim=1)
 
-        # ベクトルの期待値を計算 eq(5)
+        # ベクトルの期待値を計算 eq(4)
         y_hat = vector_sequence * 0
         for i in range(B):
             for j in range(sentence_length[i]):
-                y_hat[i, j, :] = y[i, j, :] * self.weights[str(word_sequence[i, j])]
+                y_hat[i, j, :] = vector_sequence[i, j, :] * self.weights[str(word_sequence[i, j])]
+        y_hat = torch.sum(y_hat, dim=1)
         return y, y_hat        
 
 # parameters
