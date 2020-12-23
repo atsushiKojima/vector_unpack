@@ -30,13 +30,14 @@ def train(training_data, epoch_):
         # make batch
         while batch_size < BATCH_SIZE and acc_utts < len(training_data):
             split_line = training_data[acc_utts].replace('\n', '').split('\t')
-            content_words = split_line[2].replace('\'', '').replace('[', '').replace(']', '').replace(' ', '').split(',')
-            ids = get_id_seq(word2id_dict, content_words)            
-            features = split_line[3]
-            featire_path = feaure_direc + '/' + os.path.basename(features)            
-            f.append(torch.tensor(np.load(featire_path)).float())
-            w.append(torch.tensor(ids))
-            batch_size += 1
+            if len(split_line) == 4:
+                content_words = split_line[2].replace('\'', '').replace('[', '').replace(']', '').replace(' ', '').split(',')
+                ids = get_id_seq(word2id_dict, content_words)            
+                features = split_line[3]
+                featire_path = feaure_direc + '/' + os.path.basename(features)            
+                f.append(torch.tensor(np.load(featire_path)).float())
+                w.append(torch.tensor(ids))
+                batch_size += 1
             acc_utts += 1
                         
         if len(f) != BATCH_SIZE:
