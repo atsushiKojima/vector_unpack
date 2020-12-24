@@ -13,14 +13,19 @@ torch.autograd.set_detect_anomaly(True)
 
 MIN_VAL = 10 ** (-10)
 
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
 class vector_unpack(nn.Module):
     def __init__(self, num_of_vocab):
         super(vector_unpack, self).__init__()      
         
         # 重みを 1 / 単語数 で初期化
+        rand = (-0.1 - 0.1) * torch.rand(num_of_vocab) + 0.1
+
         param_dict = {}
         for i in range(num_of_vocab):
-            param_dict[str(i)] = torch.nn.Parameter(torch.ones(1) / num_of_vocab , requires_grad=True)
+            param_dict[str(i)] = torch.nn.Parameter(torch.ones(1) * rand[i] , requires_grad=True)
         self.weights = nn.ParameterDict(param_dict)
         self.num_vocab = num_of_vocab
     
@@ -42,12 +47,13 @@ class vector_unpack(nn.Module):
             
         # L1 norm で正規化 eq(3)
         y = torch.sum(vector_sequence, dim=1) / torch.sqrt(torch.sum(torch.abs(torch.sum(vector_sequence, dim=1)), dim=1)).unsqueeze(1)
+        y = y.to(DEVICE)
 
         # ベクトルの期待値を計算 eq(4)
-        y_hat = torch.zeros(vector_sequence.size())
+        y_hat = torch.zeros(vector_sequence.size()).to(DEVICE)
         for i in range(B):
             for j in range(sentence_length[i]):
-                y_hat[i, j, :] = vector_sequence[i, j, :] * self.weights[str(int(word_sequence[i, j]))]
+                y_hat[i, j, :] = vector_sequence[i, j, :].to(DEVICE) * self.weights[str(int(word_sequence[i, j]))]
         y_hat = torch.sum(y_hat, dim=1)
         return y, y_hat        
 

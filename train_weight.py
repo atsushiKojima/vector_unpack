@@ -39,6 +39,7 @@ def train(training_data, epoch_):
                 w.append(torch.tensor(ids))
                 batch_size += 1
             acc_utts += 1
+            print(acc_utts+1, len(training_data))
                         
         if len(f) != BATCH_SIZE:
             break
@@ -72,7 +73,7 @@ def train(training_data, epoch_):
 #=============================
 max_iteration = 5000
 TAU = 100
-BATCH_SIZE = 20
+BATCH_SIZE = 512
 LEARNING_RATE = 0.001
 FEATURE_DIM = 300
 DECAY = 20
@@ -103,6 +104,7 @@ random.shuffle(train_list)
 word2id_dict = get_word2id_dict(vocab)
 model = vector_unpack(len(word2id_dict))
 model.train().to(DEVICE)
+# model.load_state_dict(torch.load('./'))
 #optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-5)
 
@@ -120,6 +122,7 @@ for epoch in range(0, max_iteration):
     train(train_list, epoch)
     #  apply threshold eq (13)   
     model.apply_threshold((epoch+1) / (max_iteration * TAU))
+    model.to(DEVICE)
         
     # model save
     torch.save(model.state_dict(), "./vector_unpack_weight_{}".format(str(epoch)))
